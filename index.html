@@ -1,0 +1,2474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    
+    <title>Visitor Gate Pass System</title>
+    
+    <!-- Load Chart.js Library -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Include Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Include jQuery and Select2 for searchable dropdowns -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+
+    <!-- Popper.js (required for Bootstrap JS) -->
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+
+    <!-- Bootstrap JS -->
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <!-- Tempus Dominus Bootstrap 4 (DateTime Picker) CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tempusdominus-bootstrap-4/5.39.0/css/tempusdominus-bootstrap-4.min.css" />
+
+    <!-- Font Awesome for Icons (if not already included) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+
+
+     <!-- Custom CSS -->
+    <style>
+        /* ==================== CSS Styles ==================== */
+
+        /* Theme Colors */
+        :root {
+            --primary-color: #32c800; /* Vibrant Green */
+            --secondary-color: #333;   /* Dark Gray */
+            --accent-color: #28a500;    /* Darker Green for hover states */
+            --success-color: #1e6407;
+            --danger-color: #FF0000;
+            --warning-color: #FFD700;
+            --info-color: #1abc9c;
+            --text-color: #333;
+            --header-color: #ffffff;
+            --sidebar-width: 300px;
+            --transition-speed: 0.3s;
+            --status-pending-color: #e67e22;
+            --status-approved-color: #174e04;
+            --status-open-color: #f39c12;
+            --status-closed-color: #3498db;
+            --status-rejected-color: #e74c3c;
+            --sidebar-color: #000000;
+        }
+
+        /* Global Styles */
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--secondary-color);
+            color: #f0f0f0; /* Light text for dark background */
+            display: flex;
+            min-height: 100vh;
+            transition: background-color var(--transition-speed), color var(--transition-speed);
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: var(--sidebar-width);
+            background-color: #444;
+            color: #f0f0f0;
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100%;
+            overflow-y: auto;
+            transition: left var(--transition-speed);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-top: 20px;
+        }
+
+        .sidebar .logo {
+            width: 90%;
+            height: 100vh;
+            object-fit: contain;
+            margin: 0;
+            padding: 0;
+
+        }
+
+        /* Hamburger Menu */
+        .hamburger {
+            position: fixed;
+            top: 15px;
+            left: 15px;
+            font-size: 28px;
+            cursor: pointer;
+            color: var(--primary-color);
+            z-index: 1100;
+            display: none; /* Hidden by default */
+        }
+
+        /* Show Hamburger on Mobile */
+        @media (max-width: 768px) {
+            .hamburger {
+                display: block;
+            }
+        }
+
+        /* Navigation Links */
+        .sidebar ul {
+            list-style: none;
+            padding: 0;
+            width: 100%;
+        }
+
+        .sidebar ul li {
+            width: 100%;
+        }
+
+        .sidebar ul li a {
+            color: #f0f0f0;
+            text-decoration: none;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            transition: background-color var(--transition-speed);
+        }
+
+        .sidebar ul li a:hover, .sidebar ul li a.active {
+            background-color: var(--primary-color);
+        }
+
+        .sidebar ul li a .icon {
+            margin-right: 10px;
+            font-size: 18px;
+            color: var(--header-color);
+        }
+
+        /* User Info */
+        .sidebar .user-info {
+            margin-bottom: 0px;
+            text-align: center;
+            font-size: 20px;
+            color: var(--info-color);
+            margin-top: 0px;
+            margin: 0; /* Remove margins */
+            padding: 0; /* Remove padding */
+        }
+
+        /* Main Content */
+        .main-content {
+            flex-grow: 1;
+            margin-left: var(--sidebar-width);
+            padding: 18px;
+            transition: margin-left var(--transition-speed);
+            width: 100%;
+        }
+
+        /* Adjust Main Content on Mobile */
+        @media (max-width: 768px) {
+            .main-content {
+                margin-left: 0;
+            }
+            .sidebar {
+                left: -var(--sidebar-width);
+            }
+            .sidebar.active {
+                left: 0;
+            }
+        }
+
+        /* Forms */
+        form {
+            background-color: #444; /* Darker form background */
+            padding: 25px;
+            border-radius: 8px;
+            max-width: 800px;
+            margin: 20px auto;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            transition: box-shadow var(--transition-speed);
+        }
+
+        form:hover {
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.5);
+        }
+
+        form label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 600;
+            font-size: 14px;
+            color: #f0f0f0;
+        }
+
+        form input, form select, form button, form textarea {
+            width: 100%;
+            padding: 10px 14px;
+            margin-bottom: 18px;
+            border: 1px solid #555;
+            border-radius: 5px;
+            box-sizing: border-box;
+            font-size: 14px;
+            background-color: #555;
+            color: #f0f0f0;
+            transition: border-color var(--transition-speed), box-shadow var(--transition-speed);
+        }
+
+        form input:focus, form select:focus, form textarea:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 5px rgba(50, 200, 0, 0.5);
+            outline: none;
+            background-color: #666;
+        }
+
+        form button {
+            background-color: var(--primary-color);
+            color: #f0f0f0;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color var(--transition-speed);
+        }
+
+        form button:hover {
+            background-color: var(--accent-color);
+        }
+
+        /* Error and Success Messages */
+        .error {
+            color: #FF4C4C;
+            margin-bottom: 15px;
+            text-align: center;
+            font-size: 16px;
+        }
+
+        .success {
+            color: #2ecc71;
+            margin-bottom: 15px;
+            text-align: center;
+            font-size: 16px;
+        }
+
+        /* Sections */
+        .section {
+            display: none;
+        }
+
+        .active-section {
+            display: block;
+        }
+
+        /* Tables */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            font-size: 14px;
+            background-color: #555;
+            color: #f0f0f0;
+        }
+
+        table, th, td {
+            border: 1px solid #777;
+        }
+
+        th, td {
+            padding: 10px;
+            text-align: center;
+        }
+
+        th {
+            background-color: var(--primary-color);
+            color: #f0f0f0;
+        }
+
+        /* Status Buttons */
+        .status-button {
+            min-width: 100px;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 2px;
+            border: none;
+            color: white;
+            transition: background-color var(--transition-speed);
+        }
+
+
+        .status-pending {
+            background-color: #e67e22;
+        }
+
+        .status-approved {
+            background-color: var(--status-approved-color);
+        }
+
+        .status-open {
+            background-color: #04490c;
+        }
+
+        .status-closed {
+            background-color: #2104f9;
+        }
+
+        .status-rejected {
+            background-color: #fd0000;
+        }
+
+
+        /* Action Buttons */
+        .approve-button, .reject-button, .print-button, .close-button, .view-button, .edit-button {
+            min-width: 100px;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 2px;
+            border: none;
+            color: white;
+            transition: background-color var(--transition-speed);
+        }
+
+        .approve-button {
+            background-color: #227605;
+        }
+
+        .approve-button:hover {
+            background-color: #28a500;
+        }
+
+        .reject-button {
+            background-color: #FF0000;
+        }
+
+        .reject-button:hover {
+            background-color: #cc0000;
+        }
+
+        .print-button {
+            background-color: #FFD700;
+            color: black;
+        }
+
+        .print-button:hover {
+            background-color: #e6c200;
+        }
+
+        .close-button {
+            background-color: #0000FF;
+        }
+
+        .close-button:hover {
+            background-color: #3333be;
+        }
+
+        .view-button {
+            background-color: #ae8d09;
+        }
+
+        .view-button:hover {
+            background-color: #726405;
+        }
+
+        .edit-button {
+            background-color: #0c4f06;
+        }
+
+        .edit-button:hover {
+            background-color: #178806;
+        }
+
+        /* Responsive Tables */
+        @media (max-width: 768px) {
+            table, thead, tbody, th, td, tr {
+                display: block;
+            }
+
+            th {
+                position: absolute;
+                top: -9999px;
+                left: -9999px;
+            }
+
+            tr {
+                border: 1px solid #777;
+                margin-bottom: 5px;
+            }
+
+            td {
+                border: none;
+                border-bottom: 1px solid #eee;
+                position: relative;
+                padding-left: 50%;
+                text-align: left;
+            }
+
+            td:before {
+                position: absolute;
+                top: 10px;
+                left: 10px;
+                width: 45%;
+                padding-right: 10px;
+                white-space: nowrap;
+                font-weight: bold;
+            }
+
+            /* Label the data */
+            #status-table th:nth-of-type(1) { content: "Gate Pass ID"; }
+            #status-table th:nth-of-type(2) { content: "Visitor Name"; }
+            #status-table th:nth-of-type(3) { content: "Mobile Number"; }
+            #status-table th:nth-of-type(4) { content: "Company Name"; }
+            #status-table th:nth-of-type(5) { content: "Purpose"; }
+            #status-table th:nth-of-type(6) { content: "Whom to Meet"; }
+            #status-table th:nth-of-type(7) { content: "Status"; }
+            #status-table th:nth-of-type(8) { content: "In Time"; }
+            #status-table th:nth-of-type(9) { content: "Out Time"; }
+            #status-table th:nth-of-type(10) { content: "Approve/Reject"; }
+            #status-table th:nth-of-type(11) { content: "Action Time"; }
+            #status-table th:nth-of-type(12) { content: "Actions"; }
+
+            /* Repeat for other tables as needed */
+        }
+
+        /* Data Visualization */
+        #visitorChartContainer {
+            background-color: #555;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            margin-top: 20px;
+        }
+
+        /* Modal Enhancements */
+        .modal-header {
+            background-color: var(--primary-color);
+            color: #f0f0f0;
+        }
+            .modal-content {
+            color: #333; /* Change to a darker shade for better visibility */
+        }
+
+
+        .modal-footer {
+            background-color: #444;
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        /* Tooltip Enhancements */
+        .tooltip-inner {
+            max-width: 200px;
+            text-align: center;
+            font-size: 14px;
+            background-color: var(--primary-color);
+            color: #f0f0f0;
+        }
+
+        /* Theme Toggle Button */
+        .theme-toggle {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            font-size: 20px;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            transition: background-color var(--transition-speed);
+            z-index: 1001;
+        }
+
+        .theme-toggle:hover {
+            background-color: var(--accent-color);
+        }
+
+        /* Dark Theme */
+        body.dark-theme {
+            background-color: #1a1a1a;
+            color: #f0f0f0;
+        }
+
+        body.dark-theme .sidebar {
+            background-color: #1a1a1a;
+            color: #f0f0f0;
+        }
+
+        body.dark-theme form {
+            background-color: #333;
+            color: #f0f0f0;
+        }
+
+        body.dark-theme table, body.dark-theme th, body.dark-theme td {
+            border-color: #555;
+        }
+
+        body.dark-theme th {
+            background-color: var(--primary-color);
+        }
+
+        body.dark-theme .status-button {
+            color: white;
+        }
+
+        /* Additional Styles for Select2 */
+        .select2-container--default .select2-selection--single {
+            height: 38px !important;
+            border: 2px solid #555 !important;
+            border-radius: 5px !important;
+            background-color: #555 !important;
+            display: flex !important;
+            align-items: center !important;
+            padding-left: 10px !important;
+            color: #f0f0f0 !important;
+        }
+
+        .select2-container--default .select2-selection--single:focus,
+        .select2-container--default .select2-selection--multiple:focus {
+            border-color: var(--primary-color) !important;
+            outline: none !important;
+            box-shadow: 0 0 5px rgba(50, 200, 0, 0.5);
+        }
+
+        .select2-container--default .select2-selection__rendered {
+            line-height: 38px !important;
+            text-align: left !important;
+            color: #f0f0f0 !important;
+        }
+
+        .select2-container--default .select2-results__option {
+            background-color: #555 !important;
+            color: #f0f0f0 !important;
+            padding: 8px !important;
+            text-align: left !important;
+        }
+
+        .select2-container--default .select2-results__option--highlighted {
+            background-color: var(--primary-color) !important;
+            color: white !important;
+        }
+
+        /* Selected item text color for Select2 dropdown */
+        .select2-container--default .select2-selection--single .select2-selection__rendered {
+            color: #333333 !important; /* Dark text color for visibility */
+        }
+
+        .select2-container--default .select2-selection--multiple .select2-selection__choice {
+            background-color: #ffffff; /* White background */
+            color: #333333 !important; /* Dark text color for visibility */
+            border: 1px solid #cccccc; /* Border for better separation */
+            padding: 5px; /* Padding to improve readability */
+            margin-right: 3px; /* Small margin for better layout */
+        }
+
+        /* Hover effect on selected items */
+        .select2-container--default .select2-selection--multiple .select2-selection__choice:hover {
+            background-color: #f0f0f0 !important; /* Light grey background on hover */
+            color: #333333; /* Dark text color on hover */
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- Hamburger Menu -->
+    <div class="hamburger" onclick="toggleSidebar()">
+        &#9776;
+    </div>
+
+    <!-- ==================== Sidebar ==================== -->
+    <nav class="sidebar" id="sidebar">
+        <img src="https://raw.githubusercontent.com/justashish1/logo/main/logo.png" alt="Logo" class="logo">
+        <div class="user-info" id="sidebar-user-info">
+            <!-- Display Username and Role -->
+        </div>
+        <ul id="nav-links">
+            <!-- Dynamic Navigation Links -->
+        </ul>
+    </nav>
+
+    <!-- ==================== Main Content ==================== -->
+    <div class="main-content" id="main-content">
+
+        <!-- ==================== Login Section ==================== -->
+        <div id="login-section" class="section active-section" role="region" aria-label="Login Section">
+            <form id="login-form" novalidate>
+                <img src="https://raw.githubusercontent.com/justashish1/logo/main/logo.png" alt="Logo" class="logo" style="display:block; margin: 0 auto 10px auto; height: 60px;">
+                <h2 class="text-center text-medium text-theme-color">Visitor Management System</h2>
+                <div id="login-error" class="error"></div>
+                <label for="login-email">Email:</label>
+                <input type="email" id="login-email" required aria-required="true">
+
+                <label for="login-password">Password:</label>
+                <input type="password" id="login-password" required aria-required="true">
+
+                <button type="submit">Login</button>
+            </form>
+        </div>
+
+        <!-- ==================== Status Section ==================== -->
+        <div id="status-section" class="section" role="region" aria-label="Gate Pass Status Section">
+            <h2 class="text-center text-medium text-theme-color">Gate Pass Status</h2>
+            <table id="status-table">
+                <thead>
+                    <tr>
+                        <th>Gate Pass ID</th>
+                        <th>Visitor Name</th>
+                        <th>Mobile Number</th>
+                        <th>Company Name</th>
+                        <th>Purpose</th>
+                        <th>Whom to Meet</th> <!-- New Column -->
+                        <th>Status</th>
+                        <th>In Time</th>
+                        <th>Out Time</th>
+                        <th>Approve/Reject</th>
+                        <th>Action Time</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Populate with gate pass data -->
+                </tbody>
+            </table>
+        </div>
+        <!-- ==================== History Section ==================== -->
+        <div id="history-section" class="section" role="region" aria-label="Gate Pass History Section">
+            <h2 class="text-center text-medium text-theme-color">Gate Pass History</h2>
+            <table id="history-table">
+                <thead>
+                    <tr>
+                        <th>Gate Pass ID</th>
+                        <th>First Name</th>
+                        <th>Last Name</th>
+                        <th>Mobile Number</th>
+                        <th>Company Name</th>
+                        <th>Place</th>
+                        <th>Email</th>
+                        <th>Purpose</th>
+                        <th>Status</th>
+                        <th>Date Requested</th>
+                        <th>In Time</th>
+                        <th>Out Time</th>
+                        <th>Action Time</th>
+                        <th>Approve/Reject</th>
+                        <th>Whom to Meet</th>
+                        <th>Whom to Meet Mobile</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Populate with historical gate pass data -->
+                </tbody>
+            </table>
+        </div>
+
+
+        <!-- ==================== Visitor Registration Section ==================== -->
+        <div id="visitor-registration-section" class="section" role="region" aria-label="Visitor Registration Section">
+            <h2 class="text-center text-medium text-theme-color">Register Visitor</h2>
+            <!-- Error and Success Messages -->
+            <div id="visitor-error" class="error"></div>
+            <div id="visitor-success" class="success"></div>
+            <form id="visitor-form" novalidate>
+                <!-- Visitor Details -->
+                <label for="firstName">Visitor First Name:</label>
+                <input type="text" id="firstName" required aria-required="true">
+
+                <label for="lastName">Visitor Last Name:</label>
+                <input type="text" id="lastName" required aria-required="true">
+
+                <label for="mobileNumber">Mobile Number:</label>
+                <input type="tel" id="mobileNumber" required pattern="[0-9]{10}" placeholder="Enter 10-digit mobile number" aria-required="true">
+
+                <label for="companyName">Company Name:</label>
+                <input type="text" id="companyName" required aria-required="true">
+
+                <label for="place">Place:</label>
+                <input type="text" id="place" required aria-required="true">
+
+                <label for="visitorEmail">Email ID:</label>
+                <input type="email" id="visitorEmail" required aria-required="true">
+
+                <!-- Photo Section -->
+                <label for="photo">Photo (Choose from file or take photo):</label>
+                <div style="display: flex; gap: 10px;">
+                    <input type="file" id="photo" accept="image/*" style="display:none;">
+                    <button type="button" onclick="chooseFile('photo')">Choose File</button>
+                    <button type="button" onclick="openCamera('photo', 'photoPreview')">Take Photo</button>
+                </div>
+                <img id="photoPreview" src="#" alt="Photo Preview" style="display:none; width:150px; height:150px; object-fit: cover; border-radius: 50%;">
+
+                <!-- ID Card Front -->
+                <label for="idCardFront">ID Card Front (Choose from file or take photo):</label>
+                <div style="display: flex; gap: 10px;">
+                    <input type="file" id="idCardFront" accept="image/*" style="display:none;">
+                    <button type="button" onclick="chooseFile('idCardFront')">Choose File</button>
+                    <button type="button" onclick="openCamera('idCardFront', 'idCardFrontPreview')">Take Photo</button>
+                </div>
+                <img id="idCardFrontPreview" src="#" alt="ID Card Front Preview" style="display:none; width:150px; height:100px; object-fit: cover;">
+
+                <!-- ID Card Back -->
+                <label for="idCardBack">ID Card Back (Choose from file or take photo):</label>
+                <div style="display: flex; gap: 10px;">
+                    <input type="file" id="idCardBack" accept="image/*" style="display:none;">
+                    <button type="button" onclick="chooseFile('idCardBack')">Choose File</button>
+                    <button type="button" onclick="openCamera('idCardBack', 'idCardBackPreview')">Take Photo</button>
+                </div>
+                <img id="idCardBackPreview" src="#" alt="ID Card Back Preview" style="display:none; width:150px; height:100px; object-fit: cover;">
+
+                <!-- Visiting Card (Optional) -->
+                <label for="visitingCard">Visiting Card (Optional, Choose from file or take photo):</label>
+                <div style="display: flex; gap: 10px;">
+                    <input type="file" id="visitingCard" accept="image/*" style="display:none;">
+                    <button type="button" onclick="chooseFile('visitingCard')">Choose File</button>
+                    <button type="button" onclick="openCamera('visitingCard', 'visitingCardPreview')">Take Photo</button>
+                </div>
+                <img id="visitingCardPreview" src="#" alt="Visiting Card Preview" style="display:none; width:150px; height:100px; object-fit: cover;">
+
+                <!-- Submit Button -->
+                <button type="submit">Register Visitor</button>
+            </form>
+        </div>
+
+        <!-- ==================== Edit Visitor Information Section ==================== -->
+        <div id="edit-visitor-section" class="section" role="region" aria-label="Edit Visitor Information Section">
+            <h2 class="text-center text-medium text-theme-color">Edit Visitor Information</h2>
+            <div id="edit-visitor-error" class="error"></div>
+            <div id="edit-visitor-success" class="success"></div>
+            <form id="edit-visitor-form" novalidate>
+                <label for="searchVisitor">Search Visitor (by any keyword):</label>
+                <input type="text" id="searchVisitor" required aria-required="true" oninput="searchVisitor()">
+                <button type="button" onclick="searchVisitor()">Search</button>
+
+                <div id="edit-visitor-fields" style="display:none;">
+                    <label for="editFirstName">Visitor First Name:</label>
+                    <input type="text" id="editFirstName" required aria-required="true">
+
+                    <label for="editLastName">Visitor Last Name:</label>
+                    <input type="text" id="editLastName" required aria-required="true">
+
+                    <label for="editMobileNumber">Mobile Number:</label>
+                    <input type="tel" id="editMobileNumber" required pattern="[0-9]{10}" placeholder="Enter 10-digit mobile number" aria-required="true">
+
+                    <label for="editCompanyName">Company Name:</label>
+                    <input type="text" id="editCompanyName" required aria-required="true">
+
+                    <label for="editPlace">Place:</label>
+                    <input type="text" id="editPlace" required aria-required="true">
+
+                    <label for="editVisitorEmail">Email ID:</label>
+                    <input type="email" id="editVisitorEmail" required aria-required="true">
+
+                    <!-- Photo Section -->
+                    <label for="editPhoto">Photo (Choose from file or take photo):</label>
+                    <div style="display: flex; gap: 10px;">
+                        <input type="file" id="editPhoto" accept="image/*" style="display:none;">
+                        <button type="button" onclick="chooseFile('editPhoto')">Choose File</button>
+                        <button type="button" onclick="openCamera('editPhoto', 'editPhotoPreview')">Take Photo</button>
+                    </div>
+                    <img id="editPhotoPreview" src="#" alt="Edit Photo Preview" style="display:none; width:150px; height:150px; object-fit: cover; border-radius: 50%;">
+
+                    <!-- ID Card Front -->
+                    <label for="editIdCardFront">ID Card Front (Choose from file or take photo):</label>
+                    <div style="display: flex; gap: 10px;">
+                        <input type="file" id="editIdCardFront" accept="image/*" style="display:none;">
+                        <button type="button" onclick="chooseFile('editIdCardFront')">Choose File</button>
+                        <button type="button" onclick="openCamera('editIdCardFront', 'editIdCardFrontPreview')">Take Photo</button>
+                    </div>
+                    <img id="editIdCardFrontPreview" src="#" alt="Edit ID Card Front Preview" style="display:none; width:150px; height:100px; object-fit: cover;">
+
+                    <!-- ID Card Back -->
+                    <label for="editIdCardBack">ID Card Back (Choose from file or take photo):</label>
+                    <div style="display: flex; gap: 10px;">
+                        <input type="file" id="editIdCardBack" accept="image/*" style="display:none;">
+                        <button type="button" onclick="chooseFile('editIdCardBack')">Choose File</button>
+                        <button type="button" onclick="openCamera('editIdCardBack', 'editIdCardBackPreview')">Take Photo</button>
+                    </div>
+                    <img id="editIdCardBackPreview" src="#" alt="Edit ID Card Back Preview" style="display:none; width:150px; height:100px; object-fit: cover;">
+
+                    <!-- Visiting Card (Optional) -->
+                    <label for="editVisitingCard">Visiting Card (Optional, Choose from file or take photo):</label>
+                    <div style="display: flex; gap: 10px;">
+                        <input type="file" id="editVisitingCard" accept="image/*" style="display:none;">
+                        <button type="button" onclick="chooseFile('editVisitingCard')">Choose File</button>
+                        <button type="button" onclick="openCamera('editVisitingCard', 'editVisitingCardPreview')">Take Photo</button>
+                    </div>
+                    <img id="editVisitingCardPreview" src="#" alt="Edit Visiting Card Preview" style="display:none; width:150px; height:100px; object-fit: cover;">
+
+                    <button type="submit">Update Visitor</button>
+                </div>
+            </form>
+        </div>
+
+       <!-- ==================== Gate Pass Creation Section ==================== -->
+        <div id="gate-pass-section" class="section" role="region" aria-label="Gate Pass Creation Section">
+            <h2 class="text-center text-medium text-theme-color">Create New Gate Pass</h2>
+            <div id="gatepass-error" class="error"></div>
+            <div id="gatepass-success" class="success"></div>
+            <form id="gatepass-form" novalidate>
+                <label for="visitor">Visitor:</label>
+                <select id="visitor" multiple aria-required="true" style="width: 100%;">
+                    <option value="">Select Visitor</option>
+                    <!-- Populate with visitor data -->
+                </select>
+
+                <label for="whomToMeet">Whom to Meet:</label>
+                <select id="whomToMeet" multiple aria-required="true" style="width: 100%;">
+                    <option value="">Select Person</option>
+                    <!-- Populate with user data -->
+                </select>
+                <label for="purpose">Purpose:</label>
+                <input type="text" id="purpose" required aria-required="true">
+
+                <label for="destination">Destination:</label>
+                <input type="text" id="destination" required aria-required="true">
+
+                <label for="dateRequested">Date:</label>
+                <input type="date" id="dateRequested" required aria-required="true">
+
+                <label for="timeIn">Time In:</label>
+                <input type="time" id="timeIn" required aria-required="true">
+
+                <label for="approvers">Select Approver(s):</label>
+                <select id="approvers" multiple aria-required="true" style="width: 100%;">
+                    <!-- Options will be populated dynamically -->
+                </select>
+
+                <button type="submit">Create Gate Pass</button>
+            </form>
+        </div>
+
+        <!-- ==================== Master Data Management Section ==================== -->
+        <div id="master-data-section" class="section" role="region" aria-label="Master Data Management Section">
+            <h2 class="text-center text-medium text-theme-color">Master Data Management</h2>
+            <div id="user-error" class="error"></div>
+            <div id="user-success" class="success"></div>
+            <form id="user-form" novalidate>
+                <label for="firstNameUser">First Name:</label>
+                <input type="text" id="firstNameUser" required aria-required="true">
+
+                <label for="lastNameUser">Last Name:</label>
+                <input type="text" id="lastNameUser" required aria-required="true">
+
+                <label for="userEmail">Email:</label>
+                <input type="email" id="userEmail" required aria-required="true">
+
+                <label for="userPassword">Password:</label>
+                <input type="password" id="userPassword" required aria-required="true">
+
+                <label for="userRole">Role:</label>
+                <select id="userRole" aria-required="true">
+                    <option value="">Select Role</option>
+                    <option value="Admin">Admin</option>
+                    <option value="Security">Security</option>
+                    <option value="Creator">Creator</option>
+                    <option value="Approver">Approver</option>
+                </select>
+
+                <label for="userDepartment">Department:</label>
+                <select id="userDepartment" aria-required="true">
+                    <option value="">Select Department</option>
+                    <option value="Production">Production</option>
+                    <option value="Quality Assurance/Quality Control (QA/QC)">Quality Assurance/Quality Control (QA/QC)</option>
+                    <option value="Engineering">Engineering</option>
+                    <option value="Research and Development (R&D)">Research and Development (R&D)</option>
+                    <option value="Maintenance">Maintenance</option>
+                    <option value="Supply Chain/Logistics">Supply Chain/Logistics</option>
+                    <option value="Procurement/Purchasing">Procurement/Purchasing</option>
+                    <option value="Health, Safety, and Environment (HSE)">Health, Safety, and Environment (HSE)</option>
+                    <option value="Human Resources (HR)">Human Resources (HR)</option>
+                    <option value="Finance and Accounting">Finance and Accounting</option>
+                    <option value="Planning and Scheduling">Planning and Scheduling</option>
+                    <option value="Information Technology (IT)">Information Technology (IT)</option>
+                    <option value="Sales and Marketing">Sales and Marketing</option>
+                    <option value="Inventory Management/Warehouse">Inventory Management/Warehouse</option>
+                    <option value="Customer Service">Customer Service</option>
+                </select>
+
+                <!-- New Mobile Number Field -->
+                <label for="userMobileNumber">Mobile Number:</label>
+                <input type="tel" id="userMobileNumber" required pattern="[0-9]{10}" placeholder="Enter 10-digit mobile number" aria-required="true">
+
+                <button type="submit">Add User</button>
+            </form>
+
+            <!-- Users Table -->
+            <h2 class="text-center text-medium text-theme-color">Existing Users</h2>
+            <table id="users-table">
+                <thead>
+                    <tr>
+                        <th>First Name</th>
+                        <th>Last Name</th>
+                        <th>Email</th>
+                        <th>Mobile Number</th> <!-- New Column -->
+                        <th>Role</th>
+                        <th>Department</th>
+                        <th>Edit</th>
+                        <th>Delete</th>
+                        <th>Password</th>
+                     
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Populate with user data -->
+                </tbody>
+            </table>
+        </div>
+
+         <!-- ==================== Dropdown ==================== -->
+
+        <!-- ==================== Data Visualization Section ==================== -->
+        <div id="data-visualization-section" class="section" role="region" aria-label="Data Visualization Section">
+            <h2 class="text-center text-medium text-theme-color">Data Visualization</h2>
+            <canvas id="visitorChart" width="400" height="200"></canvas>
+        </div>
+
+        <!-- ==================== Download Report Section ==================== -->
+        <div id="download-report-section" class="section" role="region" aria-label="Download Report Section">
+            <h2 class="text-center text-medium text-theme-color">Download Report</h2>
+            <button onclick="downloadReport()">Download Gate Pass Report</button>
+        </div>
+
+        <!-- ==================== Approval Requests Section ==================== -->
+        <div id="approval-requests-section" class="section" role="region" aria-label="Approval Requests Section">
+            <h2 class="text-center text-medium text-theme-color">Approval Requests</h2>
+            <table id="approval-table">
+                <thead>
+                    <tr>
+                        <th>Gate Pass ID</th>
+                        <th>Visitor Name</th>
+                        <th>Purpose</th>
+                        <th>Date Requested</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Populate with pending gate passes -->
+                </tbody>
+            </table>
+        </div>
+
+    <!-- Modal Structure -->
+    <div id="viewGatePassModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="gatePassModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="gatePassModalLabel">Gate Pass Details</h5>
+                    <!-- Removed onclick attribute -->
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body" id="gatePassDetailsContent">
+                    <!-- Gate pass details will be injected here -->
+                </div>
+                <div class="modal-footer">
+                    <!-- Removed onclick attribute -->
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit In Modal -->
+    <div id="editInTimeModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="editInTimeModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <form id="edit-in-time-form">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="editInTimeModalLabel">Edit In</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    
+                    <div class="modal-body">
+                        <label for="newInTime">New In Time:</label>
+                        <div class="input-group date" id="datetimepicker1" data-target-input="nearest">
+                            <input type="text" id="newInTime" name="newInTime" class="form-control datetimepicker-input" data-target="#datetimepicker1" required />
+                            <div class="input-group-append" data-target="#datetimepicker1" data-toggle="datetimepicker">
+                                <div class="input-group-text"><i class="fas fa-calendar-alt"></i></div>
+                            </div>
+                        </div>
+                        <small class="form-text text-muted">Please select the date and time.</small>
+                        <div id="editInTimeError" class="error" style="margin-top:10px;"></div>
+                    </div>
+                    
+                    
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                    </div>
+                    
+                    <!-- Hidden input to store Gate Pass ID -->
+                    <input type="hidden" id="editGatePassId" name="editGatePassId">
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== JavaScript ==================== -->
+    <script>
+    // ==================== Mock Data ==================== -->
+
+    // Mock Users Database
+    let users = [
+        {
+            firstName: 'Ashish',
+            lastName: 'Malviya',
+            email: 'info@starengts.com',
+            password: '1111',
+            role: 'Admin',
+            department: 'Information Technology (IT)',
+            mobileNumber: '9819424646' // Added Mobile Number
+        },
+        {
+            firstName: 'Security',
+            lastName: 'Officer',
+            email: 'security@example.com',
+            password: 'security123',
+            role: 'Security',
+            department: 'Health, Safety, and Environment (HSE)',
+            mobileNumber: '4445556666' // Added Mobile Number
+        },
+        {
+            firstName: 'Creator',
+            lastName: 'User',
+            email: 'creator@example.com',
+            password: 'creator123',
+            role: 'Creator',
+            department: 'Engineering',
+            mobileNumber: '7778889999' // Added Mobile Number
+        },
+        {
+            firstName: 'Approver',
+            lastName: 'User',
+            email: 'approver@example.com',
+            password: 'approver123',
+            role: 'Approver',
+            department: 'Quality Assurance/Quality Control (QA/QC)',
+            mobileNumber: '0001112222' // Added Mobile Number
+        }
+    ];
+
+
+    // Mock Visitors Database
+    let visitors = [
+        {
+            id: 1,
+            firstName: 'John',
+            lastName: 'Doe',
+            mobileNumber: '1234567890',
+            companyName: 'ABC Corp',
+            place: 'New York',
+            email: 'johndoe@example.com',
+            photo: '',
+            idCardFront: '',
+            idCardBack: '',
+            visitingCard: ''
+        },
+        {
+            id: 2,
+            firstName: 'Jane',
+            lastName: 'Smith',
+            mobileNumber: '0987654321',
+            companyName: 'XYZ Ltd',
+            place: 'Los Angeles',
+            email: 'janesmith@example.com',
+            photo: '',
+            idCardFront: '',
+            idCardBack: '',
+            visitingCard: ''
+        }
+    ];
+
+    // Mock Gate Passes Database
+    let gatePasses = [];
+
+    // Current Logged-in User
+    let currentUser = null;
+
+    // ==================== Utility Functions ====================
+
+    // Function to switch sections
+    function showSection(sectionId) {
+        // Hide all sections
+        document.querySelectorAll('.section').forEach(section => {
+            section.classList.remove('active-section');
+        });
+
+        // Show the selected section
+        document.getElementById(sectionId).classList.add('active-section');
+
+        // Highlight the active menu item
+        document.querySelectorAll('.sidebar ul li a').forEach(link => {
+            link.classList.remove('active');
+            if (link.getAttribute('onclick') && link.getAttribute('onclick').includes(sectionId)) {
+                link.classList.add('active');
+            }
+        });
+
+        // Hide the hamburger menu and sidebar if the login section is active
+        const hamburgerMenu = document.querySelector('.hamburger');
+        const sidebar = document.getElementById('sidebar');
+        if (sectionId === 'login-section') {
+            hamburgerMenu.style.display = 'none';
+            sidebar.style.display = 'none';
+        } else {
+            hamburgerMenu.style.display = 'block';
+            sidebar.style.display = 'flex'; // or 'block' depending on your layout
+        }
+    }
+
+
+    // Function to toggle sidebar
+    function toggleSidebar() {
+        const sidebar = document.getElementById('sidebar');
+        const mainContent = document.getElementById('main-content');
+
+        if (sidebar.style.left === '-300px' || sidebar.style.left === '') {
+            sidebar.style.left = '0';
+            mainContent.style.marginLeft = '300px';
+        } else {
+            sidebar.style.left = '-300px';
+            mainContent.style.marginLeft = '0';
+        }
+    }
+
+    // Hide sidebar when clicking on the main content
+    document.getElementById('main-content').addEventListener('click', function() {
+        const sidebar = document.getElementById('sidebar');
+        const mainContent = document.getElementById('main-content');
+
+        // Only hide sidebar if it’s currently visible
+        if (sidebar.style.left === '0px') {
+            sidebar.style.left = '-300px';
+            mainContent.style.marginLeft = '0';
+        }
+    });
+
+
+
+    // Function to populate navigation based on role
+    function populateNavigation() {
+        const navLinks = document.getElementById('nav-links');
+        navLinks.innerHTML = ''; // Clear existing links
+
+        if (!currentUser) return;
+
+        // Common Links for certain roles
+        if (['Admin', 'Security', 'Creator'].includes(currentUser.role)) {
+            navLinks.innerHTML += `<li><a href="#" onclick="showSection('visitor-registration-section')"><i class="fas fa-user-plus icon"></i> Register Visitor</a></li>`;
+            navLinks.innerHTML += `<li><a href="#" onclick="showSection('edit-visitor-section')"><i class="fas fa-edit icon"></i> Edit Visitor Info</a></li>`;
+            navLinks.innerHTML += `<li><a href="#" onclick="showSection('gate-pass-section')"><i class="fas fa-id-badge icon"></i> Gate Pass </a></li>`;
+            navLinks.innerHTML += `<li><a href="#" onclick="showSection('status-section')"><i class="fas fa-info-circle icon"></i> Status</a></li>`;
+            navLinks.innerHTML += `<li><a href="#" onclick="showSection('history-section')"><i class="fas fa-history icon"></i> History</a></li>`;
+        }
+
+        // Admin Specific Links
+        if (currentUser.role === 'Admin') {
+            navLinks.innerHTML += `<li><a href="#" onclick="showSection('master-data-section')"><i class="fas fa-database icon"></i> Master Data</a></li>`;
+            navLinks.innerHTML += `<li><a href="#" onclick="showSection('data-visualization-section')"><i class="fas fa-chart-bar icon"></i> Data Visualization</a></li>`;
+            navLinks.innerHTML += `<li><a href="#" onclick="showSection('download-report-section')"><i class="fas fa-download icon"></i> Download Report</a></li>`;
+        }
+
+        // Approver Specific Links
+        if (currentUser.role === 'Approver') {
+            navLinks.innerHTML += `<li><a href="#" onclick="showApprovalSection()"><i class="fas fa-check-circle icon"></i> Approval Requests</a></li>`;
+        }
+
+        // Logout Link
+        navLinks.innerHTML += `<br><br><br><br><br><br><li><a href="#" onclick="logout()"><i class="fas fa-sign-out-alt icon"></i> Logout</a></li>`;
+
+        // Display User Info in Sidebar
+        const sidebarUserInfo = document.getElementById('sidebar-user-info');
+        sidebarUserInfo.innerHTML = `${currentUser.email} (${currentUser.role})`;
+    }
+
+   // Function to handle login
+    function handleLogin(event) {
+        event.preventDefault();
+
+        const email = document.getElementById('login-email').value.trim();
+        const password = document.getElementById('login-password').value.trim();
+        const errorDiv = document.getElementById('login-error');
+
+        // Find user
+        const user = users.find(u => u.email === email && u.password === password);
+
+        if (user) {
+            currentUser = user;
+            sessionStorage.setItem('loggedInUser', JSON.stringify(user));
+            errorDiv.textContent = '';
+
+            // Hide login page
+            document.getElementById('login-section').style.display = 'none';
+
+            // Show main content area
+            document.getElementById('main-content').style.display = 'block';
+
+            // Show sidebar and hamburger menu
+            document.getElementById('sidebar').style.display = 'flex';
+            document.querySelector('.hamburger').style.display = 'block';
+
+            // Set main-content margin
+            document.querySelector('.main-content').style.marginLeft = '300px';
+
+            // Initialize main content
+            populateNavigation();
+            showSection('status-section');
+            populateVisitorsDropdown();
+            populateUsersTable();
+            populateStatusTable();
+            populateHistoryTable();
+            renderVisitorChart();
+            populateApprovalRequests();
+            populateApproversDropdown();
+
+            console.log(`User ${email} logged in.`);
+        } else {
+            errorDiv.textContent = 'Invalid email or password.';
+        }
+    }
+
+    // Function to handle logout
+    function logout() {
+        currentUser = null;
+        sessionStorage.removeItem('loggedInUser');
+        document.getElementById('login-form').reset();
+        document.getElementById('nav-links').innerHTML = '';
+        document.getElementById('sidebar-user-info').innerHTML = '';
+
+        // Hide all other sections
+        document.querySelectorAll('.section').forEach(section => {
+            section.classList.remove('active-section');
+            section.style.display = 'none';
+        });
+
+        // Hide sidebar and hamburger menu
+        document.getElementById('sidebar').style.display = 'none';
+        document.querySelector('.hamburger').style.display = 'none';
+
+        // Reset main-content margin
+        document.querySelector('.main-content').style.marginLeft = '0';
+
+        // Show login section and reset its layout
+        const loginSection = document.getElementById('login-section');
+        loginSection.style.display = 'flex';
+        loginSection.style.justifyContent = 'center'; // Center horizontally
+        loginSection.style.alignItems = 'center';     // Center vertically
+        loginSection.style.height = '92vh';          // Full height to ensure centering
+        loginSection.style.width = '80%';          // Reset any margin changes
+
+
+        console.log('User logged out. Redirected to login.');
+    }
+
+
+    // Function to handle visitor registration
+    function handleVisitorRegistration(event) {
+        event.preventDefault();
+
+        const firstName = document.getElementById('firstName').value.trim();
+        const lastName = document.getElementById('lastName').value.trim();
+        const mobileNumber = document.getElementById('mobileNumber').value.trim();
+        const companyName = document.getElementById('companyName').value.trim();
+        const place = document.getElementById('place').value.trim();
+        const email = document.getElementById('visitorEmail').value.trim();
+        const photo = document.getElementById('photo').files[0];
+        const idCardFront = document.getElementById('idCardFront').files[0];
+        const idCardBack = document.getElementById('idCardBack').files[0];
+        const visitingCard = document.getElementById('visitingCard').files[0];
+
+        const successDiv = document.getElementById('visitor-success');
+        const errorDiv = document.getElementById('visitor-error');
+
+        if (firstName === '' || lastName === '' || mobileNumber === '' || companyName === '' || place === '' || email === '' || !photo || !idCardFront || !idCardBack) {
+            errorDiv.textContent = 'Please fill in all required fields.';
+            successDiv.textContent = '';
+            return;
+        }
+
+        // Check if visitor already exists
+        const existingVisitor = visitors.find(v => v.email === email);
+        if (existingVisitor) {
+            errorDiv.textContent = 'Visitor already exists.';
+            successDiv.textContent = '';
+            return;
+        }
+
+        // Create new visitor
+        const newVisitor = {
+            id: visitors.length + 1,
+            firstName,
+            lastName,
+            mobileNumber,
+            companyName,
+            place,
+            email,
+            photo: URL.createObjectURL(photo),
+            idCardFront: idCardFront.name,
+            idCardBack: idCardBack.name,
+            visitingCard: visitingCard ? visitingCard.name : ''
+        };
+
+        visitors.push(newVisitor);
+        successDiv.textContent = 'Visitor registered successfully!';
+        errorDiv.textContent = '';
+        document.getElementById('visitor-form').reset();
+        populateVisitorsDropdown();
+        populateStatusTable();
+        renderVisitorChart();
+    }
+
+    // Function to populate visitors dropdown in gate pass form
+    function populateVisitorsDropdown() {
+        const visitorSelect = document.getElementById('visitor');
+        visitorSelect.innerHTML = `<option value="">Select Visitor</option>`;
+
+        visitors.forEach(visitor => {
+            const option = document.createElement('option');
+            option.value = visitor.id;
+            option.textContent = `${visitor.firstName} ${visitor.lastName} (${visitor.email})`;
+            visitorSelect.appendChild(option);
+        });
+
+        // Initialize Select2 for searchable dropdown
+        $('#visitor').select2({
+            placeholder: 'Select Visitor',
+            allowClear: true,
+            dropdownCssClass: 'select2-custom' // Add custom CSS class
+        });
+    }
+
+
+    // Function to handle gate pass creation
+    function handleGatePassCreation(event) {
+        event.preventDefault();
+
+        const visitorId = parseInt(document.getElementById('visitor').value);
+        const purpose = document.getElementById('purpose').value.trim();
+        const destination = document.getElementById('destination').value.trim();
+        const dateRequested = document.getElementById('dateRequested').value;
+        const timeIn = document.getElementById('timeIn').value;
+        const approversSelect = document.getElementById('approvers');
+        const selectedApprovers = Array.from(approversSelect.selectedOptions).map(option => option.value);
+        const whomToMeet = document.getElementById('whomToMeet').value; // Capture the 'Whom to Meet' input
+
+        const successDiv = document.getElementById('gatepass-success');
+        const errorDiv = document.getElementById('gatepass-error');
+
+        // Validate inputs, including 'Whom to Meet'
+        if (!visitorId || purpose === '' || destination === '' || dateRequested === '' || timeIn === '' || selectedApprovers.length === 0 || whomToMeet === '') {
+            errorDiv.textContent = 'Please fill in all required fields and select at least one approver and a person to meet.';
+            successDiv.textContent = '';
+            return;
+        }
+
+        // Create new gate pass object, including 'Whom to Meet'
+        const newGatePass = {
+            gatePassId: generateGatePassId(),
+            visitorId,
+            purpose,
+            destination,
+            dateRequested,
+            timeIn,
+            status: 'Pending',
+            approvers: selectedApprovers,
+            approvedBy: [],
+            inTime: null,
+            whomToMeet  // Add 'Whom to Meet' field
+        };
+
+        // Add the new gate pass to the list
+        gatePasses.push(newGatePass);
+        successDiv.textContent = 'Gate pass created successfully and sent for approval.';
+        errorDiv.textContent = '';
+        document.getElementById('gatepass-form').reset();
+        populateStatusTable();
+        renderVisitorChart();
+        populateApprovalRequests();
+
+        // Reset the date and time inputs to current date and time
+        const now = new Date();
+        const dateStr = now.toISOString().split('T')[0]; // Format: YYYY-MM-DD
+        const timeStr = now.toTimeString().split(' ')[0].substring(0, 5); // Format: HH:MM
+        document.getElementById('dateRequested').value = dateStr;
+        document.getElementById('timeIn').value = timeStr;
+    }
+
+
+    // Function to populate users table
+    function populateUsersTable() {
+        const usersTableBody = document.querySelector('#users-table tbody');
+        usersTableBody.innerHTML = '';
+
+        users.forEach((user, index) => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${user.firstName}</td>
+                <td>${user.lastName}</td>
+                <td>${user.email}</td>
+                <td>${user.mobileNumber}</td> <!-- Display Mobile Number -->
+                <td>${user.role}</td>
+                <td>${user.department || '--'}</td>
+                <td><button class="approve-button" onclick="editUser(${index})">Edit</button></td>
+                <td><button class="reject-button" onclick="deleteUser(${index})">Delete</button></td>
+                <td>${user.password}</td>
+            `;
+            usersTableBody.appendChild(row);
+        });
+    }
+
+
+    // Function to edit user
+    function editUser(index) {
+        const user = users[index];
+        const firstName = prompt('Enter new first name:', user.firstName);
+        const lastName = prompt('Enter new last name:', user.lastName);
+        const email = prompt('Enter new email:', user.email);
+        const password = prompt('Enter new password:', user.password);
+        const role = prompt('Enter new role (Admin, Security, Creator, Approver):', user.role);
+        const department = prompt('Enter new department:', user.department || '');
+        const mobileNumber = prompt('Enter new mobile number (10 digits):', user.mobileNumber || ''); // Prompt for Mobile Number
+
+        // Validate Mobile Number
+        const mobileRegex = /^[0-9]{10}$/;
+        if (!mobileRegex.test(mobileNumber)) {
+            alert('Invalid mobile number format. Please enter exactly 10 digits.');
+            return;
+        }
+
+        if (firstName && lastName && email && password && role && department && mobileNumber) {
+            users[index] = { firstName, lastName, email, password, role, department, mobileNumber };
+            alert('User updated successfully!');
+            populateUsersTable();
+            populateApproversDropdown();
+        } else {
+            alert('All fields are required.');
+        }
+    }
+
+
+    // Function to delete user
+    function deleteUser(index) {
+        if (confirm('Are you sure you want to delete this user?')) {
+            users.splice(index, 1);
+            alert('User deleted successfully!');
+            populateUsersTable();
+            populateApproversDropdown();
+        }
+    }
+
+    // Function to populate approvers dropdown in gate pass form
+    function populateApproversDropdown() {
+        const approversSelect = document.getElementById('approvers');
+        approversSelect.innerHTML = '';
+
+        const approvers = users.filter(user => user.role === 'Approver' || user.role === 'Admin');
+
+        approvers.forEach(user => {
+            const option = document.createElement('option');
+            option.value = user.email;
+            option.textContent = `${user.firstName} ${user.lastName} (${user.email}) - ${user.department}`;
+            approversSelect.appendChild(option);
+        });
+
+        // Initialize Select2 for searchable dropdown
+        $('#approvers').select2({
+            placeholder: 'Select Approver(s)',
+            allowClear: true,
+            dropdownCssClass: 'select2-custom' // Add custom CSS class
+        });
+    }
+
+    // Function to populate Approval Requests
+    function populateApprovalRequests() {
+        const approvalTableBody = document.querySelector('#approval-table tbody');
+        approvalTableBody.innerHTML = '';
+
+        const pendingGatePasses = gatePasses.filter(gp =>
+            gp.status === 'Pending' &&
+            gp.approvers.includes(currentUser.email) &&
+            !gp.approvedBy.some(a => a.email === currentUser.email)
+        );
+
+        pendingGatePasses.forEach(gatePass => {
+            const visitor = visitors.find(v => v.id === gatePass.visitorId);
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${gatePass.gatePassId}</td>
+                <td>${visitor ? `${visitor.firstName} ${visitor.lastName}` : '--'}</td>
+                <td>${gatePass.purpose}</td>
+                <td>${gatePass.dateRequested}</td>
+                <td>
+                    <button class="approve-button" onclick="approveGatePass('${gatePass.gatePassId}')">Approve</button>
+                    <button class="reject-button" onclick="rejectGatePass('${gatePass.gatePassId}')">Reject</button>
+                </td>
+            `;
+            approvalTableBody.appendChild(row);
+        });
+    }
+
+    // Function to approve gate pass
+    // Function to approve gate pass
+    function approveGatePass(gatePassId) {
+        const gatePass = gatePasses.find(gp => gp.gatePassId === gatePassId);
+        if (gatePass) {
+            if (currentUser.role === 'Admin' || (currentUser.role === 'Approver' && gatePass.approvers.includes(currentUser.email))) {
+                // Store approver details
+                gatePass.approvedBy.push({
+                    email: currentUser.email,
+                    name: `${currentUser.firstName} ${currentUser.lastName}`,
+                    mobile: currentUser.mobileNumber, // Ensure mobile number is stored
+                    date: new Date().toLocaleString()
+                });
+
+                // Update status and times
+                if (gatePass.approvedBy.length === gatePass.approvers.length) {
+                    gatePass.status = 'In';
+                    gatePass.actionTime = new Date().toLocaleString();
+                    gatePass.inTime = gatePass.actionTime;
+                    alert(`Gate Pass ID ${gatePassId} has been approved by all approvers and is now In.`);
+                } else {
+                    alert(`Gate Pass ID ${gatePassId} has been approved by you.`);
+                }
+
+                populateStatusTable(); // Refresh the status table
+            } else {
+                alert('You are not authorized to approve this gate pass.');
+            }
+        } else {
+            alert('Gate Pass not found.');
+        }
+    }
+
+    // Function to reject gate pass
+    function rejectGatePass(gatePassId) {
+        const gatePass = gatePasses.find(gp => gp.gatePassId === gatePassId);
+        if (gatePass) {
+            if (currentUser.role === 'Admin' || (currentUser.role === 'Approver' && gatePass.approvers.includes(currentUser.email))) {
+                const approver = users.find(user => user.email === currentUser.email);
+                if (approver) {
+                    // Set status to 'Rejected' and record rejection time
+                    gatePass.status = 'Rejected';
+                    gatePass.actionTime = new Date().toLocaleString(); // Record rejection time
+                    gatePass.rejectedBy = {
+                        email: currentUser.email,
+                        name: `${approver.firstName} ${approver.lastName}`,
+                        date: gatePass.actionTime,
+                        mobile: approver.mobileNumber
+                    };
+                    gatePass.approvedBy = [];
+                    alert(`Gate Pass ID ${gatePassId} has been rejected.`);
+                } else {
+                    alert('Approver information not found.');
+                }
+
+                populateApprovalRequests();
+                populateStatusTable();
+                populateHistoryTable(); // Ensure history table is updated
+                renderVisitorChart();
+            } else {
+                alert('You are not authorized to reject this gate pass.');
+            }
+        } else {
+            alert('Gate Pass not found.');
+        }
+    }
+
+
+
+    // Function to close gate pass
+   // Function to close gate pass
+    function closeGatePass(gatePassId) {
+        const gatePass = gatePasses.find(gp => gp.gatePassId === gatePassId);
+        if (gatePass) {
+            const now = new Date();
+
+            // Find the current user from the users list
+            const closer = users.find(user => user.email === currentUser.email);
+            if (closer) {
+                gatePass.status = 'Out';
+                gatePass.timeOut = now.toLocaleString(); // Record closure time
+                gatePass.actionTime = gatePass.timeOut; // Update action time
+
+                // Add closer information
+                gatePass.closedBy = {
+                    email: currentUser.email,
+                    name: `${closer.firstName} ${closer.lastName}`,
+                    mobile: closer.mobileNumber,
+                    date: gatePass.timeOut
+                };
+
+                alert(`Gate Pass ID ${gatePassId} has been closed by ${closer.firstName} ${closer.lastName}.`);
+                populateStatusTable();
+                populateHistoryTable();
+                renderVisitorChart();
+            } else {
+                alert('Error: Current user information could not be found.');
+            }
+        } else {
+            alert('Error: Gate Pass not found.');
+        }
+    }
+
+
+    // Function to populate status table with view button
+    // Function to populate the status table with 'Whom to Meet'
+    function populateStatusTable() {
+        const statusTableBody = document.querySelector('#status-table tbody');
+        statusTableBody.innerHTML = '';
+
+        gatePasses.forEach(gatePass => {
+            const visitor = visitors.find(v => v.id === gatePass.visitorId);
+            const whomToMeetUser = users.find(user => user.email === gatePass.whomToMeet); // Find the 'Whom to Meet' user
+
+            const row = document.createElement('tr');
+
+            // Set the CSS class for status
+            let statusClass = '';
+            switch (gatePass.status) {
+                case 'Pending':
+                    statusClass = 'status-pending';
+                    break;
+                case 'In':
+                    statusClass = 'status-open';
+                    break;
+                case 'Out':
+                    statusClass = 'status-closed';
+                    break;
+                case 'Rejected':
+                    statusClass = 'status-rejected';
+                    break;
+                default:
+                    statusClass = '';
+            }
+
+            // Define actions based on current user role and gate pass status
+            let actions = '';
+            if (currentUser.role === 'Admin') {
+                if (gatePass.status === 'Pending') {
+                    actions += `<button class="approve-button" onclick="approveGatePass('${gatePass.gatePassId}')">Approve</button>`;
+                    actions += `<button class="reject-button" onclick="rejectGatePass('${gatePass.gatePassId}')">Reject</button>`;
+                }
+                if (gatePass.status === 'In') {
+                    actions += `<button class="print-button" onclick="printGatePass('${gatePass.gatePassId}')">Print</button>`;
+                    actions += `<button class="close-button" onclick="closeGatePass('${gatePass.gatePassId}')">Close</button>`;
+                    actions += `<button class="edit-button" onclick="editInTime('${gatePass.gatePassId}')">Edit In</button>`;
+                }
+            } else {
+                if (gatePass.status === 'Pending' && currentUser.role === 'Approver') {
+                    if (gatePass.approvers.includes(currentUser.email)) {
+                        actions += `<button class="approve-button" onclick="approveGatePass('${gatePass.gatePassId}')">Approve</button>`;
+                        actions += `<button class="reject-button" onclick="rejectGatePass('${gatePass.gatePassId}')">Reject</button>`;
+                    }
+                }
+                if (gatePass.status === 'In' && currentUser.role === 'Security') {
+                    actions += `<button class="print-button" onclick="printGatePass('${gatePass.gatePassId}')">Print</button>`;
+                    actions += `<button class="close-button" onclick="closeGatePass('${gatePass.gatePassId}')">Close</button>`;
+                    actions += `<button class="edit-button" onclick="editInTime('${gatePass.gatePassId}')">Edit In</button>`;
+                }
+            }
+
+            if (gatePass.status === 'Out' || gatePass.status === 'Rejected') {
+                actions += `<button class="view-button" onclick="viewGatePass('${gatePass.gatePassId}')">View</button>`;
+            }
+
+            // Define approver/rejector/closer information display
+            let approversInfo = 'None';
+            if (gatePass.status === 'Pending') {
+                const approver = users.find(user => user.email === gatePass.approvers[0]);
+                if (approver) {
+                    approversInfo = `Pending With: ${approver.firstName} ${approver.lastName} (${approver.mobileNumber})`;
+                }
+            } else if (gatePass.status === 'In') {
+                if (gatePass.approvedBy && gatePass.approvedBy.length > 0) {
+                    approversInfo = gatePass.approvedBy.map(a => `Approved By: ${a.name} (${a.mobile})`).join(', ');
+                }
+            } else if (gatePass.status === 'Out') {
+                if (gatePass.closedBy) {
+                    approversInfo = `Closed By: ${gatePass.closedBy.name} (${gatePass.closedBy.mobile})`;
+                }
+            } else if (gatePass.status === 'Rejected' && gatePass.rejectedBy) {
+                approversInfo = `Rejected By: ${gatePass.rejectedBy.name} (${gatePass.rejectedBy.mobile})`;
+            }
+
+            // Determine Out Time display
+            let outTimeDisplay = 'N/A';
+            if (gatePass.status === 'Out') {
+                outTimeDisplay = gatePass.timeOut || 'N/A';
+            }
+
+            // Update row.innerHTML to include necessary columns
+            row.innerHTML = `
+                <td>${gatePass.gatePassId}</td>
+                <td>${visitor ? `${visitor.firstName} ${visitor.lastName}` : 'N/A'}</td>
+                <td>${visitor ? visitor.mobileNumber : 'N/A'}</td>
+                <td>${visitor ? visitor.companyName : 'N/A'}</td>
+                <td>${gatePass.purpose}</td>
+                <td>${whomToMeetUser ? `${whomToMeetUser.firstName} ${whomToMeetUser.lastName}` : 'N/A'}</td> <!-- New Column for Whom to Meet -->
+                <td><span class="status-button ${statusClass}">${gatePass.status}</span></td>
+                <td>${gatePass.inTime || 'N/A'}</td>
+                <td>${outTimeDisplay}</td>
+                <td>${approversInfo}</td>
+                <td>${gatePass.actionTime || 'N/A'}</td>
+                <td>${actions}</td>
+            `;
+            statusTableBody.appendChild(row);
+        });
+    }
+
+    //Modify the viewGatePass function to use Bootstrap's jQuery-based modal methods.//
+    function viewGatePass(gatePassId) {
+        const gatePass = gatePasses.find(gp => gp.gatePassId === gatePassId);
+        const visitor = visitors.find(v => v.id === gatePass.visitorId);
+
+        if (gatePass && visitor) {
+            // Create HTML content with the gate pass details
+            const gatePassDetailsHTML = `
+                <p><strong>Gate Pass ID:</strong> ${gatePass.gatePassId}</p>
+                <p><strong>Visitor Name:</strong> ${visitor.firstName} ${visitor.lastName}</p>
+                <p><strong>Mobile Number:</strong> ${visitor.mobileNumber}</p>
+                <p><strong>Company Name:</strong> ${visitor.companyName}</p>
+                <p><strong>Purpose:</strong> ${gatePass.purpose}</p>
+                <p><strong>Destination:</strong> ${gatePass.destination}</p>
+                <p><strong>Date Requested:</strong> ${gatePass.dateRequested}</p>
+                <p><strong>In Time:</strong> ${gatePass.inTime || '- - -'}</p>
+                <p><strong>Out Time:</strong> ${gatePass.timeOut || '- - -'}</p>
+                <p><strong>Status:</strong> ${gatePass.status}</p>
+            `;
+
+            // Set the modal content
+            document.getElementById('gatePassDetailsContent').innerHTML = gatePassDetailsHTML;
+
+            // Use Bootstrap's modal method to show the modal
+            $('#viewGatePassModal').modal('show');
+        } else {
+            alert('Gate Pass or Visitor information not found.');
+        }
+    }
+
+
+    //Create a Function to Allow Security to Edit In//
+    // Function to edit In Time
+    function editInTime(gatePassId) {
+        // Find the gate pass
+        const gatePass = gatePasses.find(gp => gp.gatePassId === gatePassId);
+        if (!gatePass) {
+            alert('Gate Pass not found.');
+            return;
+        }
+
+        // Check if the gate pass is in 'In' status
+        if (gatePass.status !== 'In') {
+            alert('In Time can only be edited for gate passes that are currently "In".');
+            return;
+        }
+
+        // Prompt user for new In Time
+        const newInTime = prompt('Enter new In Time (YYYY/MM/DD HH:MM:SS):', gatePass.inTime || '');
+        if (newInTime === null) {
+            // User cancelled the prompt
+            return;
+        }
+
+        // Validate the new In Time format (updated regex)
+        const datetimeRegex = /^\d{2}\/\d{2}\/\d{4}, \d{2}:\d{2}:\d{2}$/;
+        if (!datetimeRegex.test(newInTime)) {
+            errorDiv.textContent = 'Invalid date and time format. Please use "DD/MM/YYYY, HH:MM:SS".';
+            return;
+        }
+
+        // Update the gate pass In Time
+        gatePass.inTime = newInTime;
+        gatePass.actionTime = new Date().toLocaleString(); // Update action time
+
+        // Update UI
+        populateStatusTable();
+        populateHistoryTable();
+        renderVisitorChart();
+
+        alert('In Time updated successfully.');
+    }
+
+
+    // Handle the form submission inside the modal
+    // Handle the form submission inside the modal
+    document.getElementById('edit-in-time-form').addEventListener('submit', function(event) {
+        event.preventDefault();
+
+        const gatePassId = document.getElementById('editGatePassId').value;
+        const newInTime = document.getElementById('newInTime').value.trim();
+        const errorDiv = document.getElementById('editInTimeError');
+
+        // Validate the new In Time format (DD/MM/YYYY, HH:MM:SS)
+        const datetimeRegex = /^\d{2}\/\d{2}\/\d{4}, \d{2}:\d{2}:\d{2}$/;
+        if (!datetimeRegex.test(newInTime)) {
+            errorDiv.textContent = 'Invalid date and time format. Please use "DD/MM/YYYY, HH:MM:SS".';
+            return;
+        }
+
+        // Find and update the gate pass
+        const gatePass = gatePasses.find(gp => gp.gatePassId === gatePassId);
+        if (gatePass) {
+            gatePass.inTime = newInTime;
+            gatePass.actionTime = new Date().toLocaleString(); // Update action time
+
+            // Update UI components
+            populateStatusTable();
+            populateHistoryTable();
+            renderVisitorChart();
+
+            // Clear the error message
+            errorDiv.textContent = '';
+
+            // Hide the modal
+            $('#editInTimeModal').modal('hide');
+
+            // Show a success alert
+            alert('In Time updated successfully.');
+        } else {
+            errorDiv.textContent = 'Gate Pass not found.';
+        }
+    });
+
+    // Function to handle 'Edit In' button click
+    function handleEditInButtonClick(gatePassId, currentInTime) {
+        document.getElementById('editGatePassId').value = gatePassId; // Set the Gate Pass ID
+        document.getElementById('newInTime').value = currentInTime; // Set the current 'In Time'
+        $('#editInTimeModal').modal('show'); // Show the modal
+    }
+
+    $(document).ready(function() {
+        $('#datetimepicker1').datetimepicker({
+            format: 'DD/MM/YYYY, HH:mm:ss',
+            icons: {
+                time: 'fas fa-clock',
+                date: 'fas fa-calendar-alt',
+                up: 'fas fa-arrow-up',
+                down: 'fas fa-arrow-down',
+                previous: 'fas fa-chevron-left',
+                next: 'fas fa-chevron-right',
+                today: 'fas fa-calendar-check',
+                clear: 'fas fa-trash',
+                close: 'fas fa-times'
+            }
+        });
+    });
+
+    // Function to populate history table with rejected status
+   
+    function populateHistoryTable() {
+        // Ensure the user is logged in before populating the history table
+        if (!currentUser) return;
+
+        const historyTableBody = document.querySelector('#history-table tbody');
+        historyTableBody.innerHTML = '';
+
+        gatePasses.forEach(gatePass => {
+            const visitor = visitors.find(v => v.id === gatePass.visitorId);
+            const whomToMeetUser = users.find(user => user.email === gatePass.whomToMeet); // Find 'Whom to Meet' user
+
+            const row = document.createElement('tr');
+
+            // Determine approver or rejection info
+            let approversInfo = 'None';
+            if (gatePass.approvedBy && gatePass.approvedBy.length > 0) {
+                approversInfo = gatePass.approvedBy.map(a => `${a.name} (${a.date})`).join(', ');
+                approversInfo = `Approved By: ${approversInfo}`;
+            }
+            if (gatePass.rejectedBy) {
+                approversInfo = `Rejected By: ${gatePass.rejectedBy.name} (${gatePass.rejectedBy.date})`;
+            }
+
+            // Construct the row with combined date and time
+            row.innerHTML = `
+                <td>${gatePass.gatePassId}</td>
+                <td>${visitor ? visitor.firstName : '- - -'}</td>
+                <td>${visitor ? visitor.lastName : '- - -'}</td>
+                <td>${visitor ? visitor.mobileNumber : '- - -'}</td>
+                <td>${visitor ? visitor.companyName : '- - -'}</td>
+                <td>${visitor ? visitor.place : '- - -'}</td>
+                <td>${visitor ? visitor.email : '- - -'}</td>
+                <td>${gatePass.purpose}</td>
+                <td>${gatePass.status}</td>
+                <td>${gatePass.dateRequested || '- - -'}</td>
+                <td>${gatePass.inTime || '- - -'}</td>
+                <td>${gatePass.timeOut || '- - -'}</td>
+                <td>${gatePass.actionTime || '- - -'}</td>
+                <td>${approversInfo}</td>
+                <td>${whomToMeetUser ? `${whomToMeetUser.firstName} ${whomToMeetUser.lastName}` : '- - -'}</td>
+                <td>${whomToMeetUser ? whomToMeetUser.mobileNumber : '- - -'}</td>
+            `;
+            historyTableBody.appendChild(row);
+        });
+
+        // Hide sidebar and hamburger menu on the login page
+        const sidebar = document.getElementById('sidebar');
+        const hamburger = document.querySelector('.hamburger');
+        if (!currentUser) {
+            sidebar.style.display = 'none';
+            hamburger.style.display = 'none';
+        } else {
+            sidebar.style.display = 'flex';
+            hamburger.style.display = 'block';
+        }
+    }
+
+
+    // Ensure this is at the top level of your script, not inside another function or block
+    // Search Visitor Function
+    function searchVisitor() {
+        const keyword = document.getElementById('searchVisitor').value.trim().toLowerCase();
+        const errorDiv = document.getElementById('edit-visitor-error');
+        const editFields = document.getElementById('edit-visitor-fields');
+
+        errorDiv.textContent = '';
+        editFields.style.display = 'none';
+
+        if (keyword === '') {
+            return;
+        }
+
+        // Find matching visitors
+        const matchingVisitors = visitors.filter(v =>
+            v.firstName.toLowerCase().includes(keyword) ||
+            v.lastName.toLowerCase().includes(keyword) ||
+            v.mobileNumber.includes(keyword) ||
+            v.email.toLowerCase().includes(keyword) ||
+            v.companyName.toLowerCase().includes(keyword)
+        );
+
+        if (matchingVisitors.length === 1) {
+            const visitor = matchingVisitors[0];
+            document.getElementById('editFirstName').value = visitor.firstName;
+            document.getElementById('editLastName').value = visitor.lastName;
+            document.getElementById('editMobileNumber').value = visitor.mobileNumber;
+            document.getElementById('editCompanyName').value = visitor.companyName;
+            document.getElementById('editPlace').value = visitor.place;
+            document.getElementById('editVisitorEmail').value = visitor.email;
+            editFields.style.display = 'block';
+        } else if (matchingVisitors.length > 1) {
+            errorDiv.textContent = 'Multiple visitors found. Please refine your search.';
+        } else {
+            errorDiv.textContent = 'Visitor not found.';
+        }
+    }
+
+    // Handle Visitor Update Function
+    function handleVisitorUpdate(event) {
+        event.preventDefault();
+
+        const email = document.getElementById('editVisitorEmail').value.trim();
+        const visitorIndex = visitors.findIndex(v => v.email === email);
+
+        if (visitorIndex === -1) {
+            alert('Visitor not found.');
+            return;
+        }
+
+        const firstName = document.getElementById('editFirstName').value.trim();
+        const lastName = document.getElementById('editLastName').value.trim();
+        const mobileNumber = document.getElementById('editMobileNumber').value.trim();
+        const companyName = document.getElementById('editCompanyName').value.trim();
+        const place = document.getElementById('editPlace').value.trim();
+
+        // Update visitor details
+        visitors[visitorIndex].firstName = firstName;
+        visitors[visitorIndex].lastName = lastName;
+        visitors[visitorIndex].mobileNumber = mobileNumber;
+        visitors[visitorIndex].companyName = companyName;
+        visitors[visitorIndex].place = place;
+
+        alert('Visitor information updated successfully!');
+        document.getElementById('edit-visitor-form').reset();
+        document.getElementById('edit-visitor-fields').style.display = 'none';
+    }
+
+    // Add event listener to handle form submission for editing visitor info
+    document.getElementById('edit-visitor-form').addEventListener('submit', handleVisitorUpdate);
+
+    // Add event listener to the search input for real-time search
+    document.getElementById('searchVisitor').addEventListener('input', searchVisitor);
+
+    // Function to render visitor statistics chart
+    function renderVisitorChart() {
+        if (typeof Chart === 'undefined') {
+            console.error('Chart.js library is not loaded.');
+            return;
+        }
+
+        const ctx = document.getElementById('visitorChart').getContext('2d');
+        const visitorCounts = {};
+
+        gatePasses.forEach(gatePass => {
+            const visitor = visitors.find(v => v.id === gatePass.visitorId);
+            if (visitor) {
+                const visitorName = `${visitor.firstName} ${visitor.lastName}`;
+                visitorCounts[visitorName] = (visitorCounts[visitorName] || 0) + 1;
+            }
+        });
+
+        const data = {
+            labels: Object.keys(visitorCounts),
+            datasets: [{
+                label: 'Number of Visits',
+                data: Object.values(visitorCounts),
+                backgroundColor: 'rgba(50, 200, 0, 0.6)',
+                borderColor: 'rgba(50, 200, 0, 1)',
+                borderWidth: 1
+            }]
+        };
+
+        if (window.visitorChartInstance) {
+            window.visitorChartInstance.destroy();
+        }
+
+        window.visitorChartInstance = new Chart(ctx, {
+            type: 'bar',
+            data: data,
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            precision:0
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // Function to download report
+    // Updated function to download report
+    function downloadReport() {
+        // Prepare CSV data
+        let csvContent = "data:text/csv;charset=utf-8,";
+        csvContent += "Gate Pass ID,First Name,Last Name,Mobile Number,Company Name,Place,Email,Purpose,Status,Date Requested,In Time,Out Time,Action Time,Approve/Reject,Whom to Meet,Whom to Meet Mobile\n";
+
+        gatePasses.forEach(gatePass => {
+            const visitor = visitors.find(v => v.id === gatePass.visitorId);
+            const whomToMeetUser = users.find(user => user.email === gatePass.whomToMeet);
+
+            // Merge date and time fields
+            const dateRequested = `${gatePass.dateRequested || '--'} ${gatePass.dateRequestedTime || ''}`.trim();
+            const inTime = `${gatePass.inTime || '--'} ${gatePass.inTimeTime || ''}`.trim();
+            const outTime = `${gatePass.timeOut || '--'} ${gatePass.outTime || ''}`.trim();
+            const actionTime = `${gatePass.actionTime || '--'} ${gatePass.actionTimeTime || ''}`.trim();
+            let approversInfo = 'None';
+
+            // Determine approver or rejection info
+            if (gatePass.status === 'Out' || gatePass.status === 'In') {
+                if (gatePass.approvedBy) {
+                    approversInfo = gatePass.approvedBy.map(a => `${a.name} (${a.date})`).join('; ') || 'None';
+                }
+            } else if (gatePass.status === 'Rejected') {
+                if (gatePass.rejectedBy) {
+                    approversInfo = `${gatePass.rejectedBy.name} (${gatePass.rejectedBy.date})`;
+                }
+            }
+
+            // Construct CSV row
+            csvContent += `${gatePass.gatePassId},${visitor ? visitor.firstName : '--'},${visitor ? visitor.lastName : '--'},${visitor ? visitor.mobileNumber : '--'},${visitor ? visitor.companyName : '--'},${visitor ? visitor.place : '--'},${visitor ? visitor.email : '--'},${gatePass.purpose},${gatePass.status},${dateRequested},${inTime},${outTime},${actionTime},${approversInfo},${whomToMeetUser ? `${whomToMeetUser.firstName} ${whomToMeetUser.lastName}` : '--'},${whomToMeetUser ? whomToMeetUser.mobileNumber : '--'}\n`;
+        });
+
+        // Encode URI and create download link
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", "gate_pass_report.csv");
+        document.body.appendChild(link);
+
+        link.click();
+        document.body.removeChild(link);
+    }
+
+    // Function to initialize the application
+    function initializeApp() {
+        showSection('login-section');
+        currentUser = null;
+        populateApproversDropdown();
+
+        // Hide sidebar and hamburger menu on app start
+        document.getElementById('sidebar').style.display = 'none';
+        document.querySelector('.hamburger').style.display = 'none';
+
+        // Check for logged-in user
+        const loggedInUser = sessionStorage.getItem('loggedInUser');
+        if (loggedInUser) {
+            currentUser = JSON.parse(loggedInUser);
+            populateNavigation();
+            showSection('status-section');
+            populateVisitorsDropdown();
+            populateUsersTable();
+            populateStatusTable();
+            populateHistoryTable();
+            renderVisitorChart();
+            populateApprovalRequests();
+            populateApproversDropdown();
+            document.getElementById('login-section').style.display = 'none';
+
+            // Show sidebar and hamburger menu after login
+            document.getElementById('sidebar').style.display = 'flex';
+            document.querySelector('.hamburger').style.display = 'block';
+        }
+    }
+
+    // Function to generate Gate Pass ID
+    function generateGatePassId() {
+        const randomDigits = Math.floor(1000000 + Math.random() * 9000000);
+        return `UGPN${randomDigits}`;
+    }
+
+    // Event Listeners
+    document.addEventListener('DOMContentLoaded', () => {
+        const loginForm = document.getElementById('login-form');
+        if (loginForm) {
+            loginForm.addEventListener('submit', handleLogin);
+        }
+
+        const visitorForm = document.getElementById('visitor-form');
+        if (visitorForm) {
+            visitorForm.addEventListener('submit', handleVisitorRegistration);
+        }
+
+        const gatepassForm = document.getElementById('gatepass-form');
+        if (gatepassForm) {
+            gatepassForm.addEventListener('submit', handleGatePassCreation);
+        }
+
+        const editVisitorForm = document.getElementById('edit-visitor-form');
+        if (editVisitorForm) {
+            editVisitorForm.addEventListener('submit', handleVisitorUpdate);
+        }
+
+        const userForm = document.getElementById('user-form');
+        if (userForm) {
+            userForm.addEventListener('submit', handleUserManagement);
+        }
+
+        // Set default date and time for "Create New Gate Pass" form
+        const dateInput = document.getElementById('dateRequested');
+        const timeInput = document.getElementById('timeIn');
+
+        if (dateInput && timeInput) {
+            const now = new Date();
+            const dateStr = now.toISOString().split('T')[0]; // Format: YYYY-MM-DD
+            const timeStr = now.toTimeString().split(' ')[0].substring(0,5); // Format: HH:MM
+
+            dateInput.value = dateStr;
+            timeInput.value = timeStr;
+        }
+
+        initializeApp();
+    });
+
+    // Function to handle user management
+    function handleUserManagement(event) {
+        event.preventDefault();
+
+        const firstName = document.getElementById('firstNameUser').value.trim();
+        const lastName = document.getElementById('lastNameUser').value.trim();
+        const email = document.getElementById('userEmail').value.trim();
+        const password = document.getElementById('userPassword').value.trim();
+        const role = document.getElementById('userRole').value;
+        const department = document.getElementById('userDepartment').value;
+        const mobileNumber = document.getElementById('userMobileNumber').value.trim();
+
+        const successDiv = document.getElementById('user-success');
+        const errorDiv = document.getElementById('user-error');
+
+        // Validate Mobile Number
+        const mobileRegex = /^[0-9]{10}$/;
+        if (!mobileRegex.test(mobileNumber)) {
+            errorDiv.textContent = 'Please enter a valid 10-digit mobile number.';
+            successDiv.textContent = '';
+            return;
+        }
+
+        if (firstName === '' || lastName === '' || email === '' || password === '' || role === '' || department === '' || mobileNumber === '') {
+            errorDiv.textContent = 'Please fill in all required fields.';
+            successDiv.textContent = '';
+            return;
+        }
+
+        // Check if user already exists
+        const existingUser = users.find(u => u.email === email);
+        if (existingUser) {
+            errorDiv.textContent = 'User with this email already exists.';
+            successDiv.textContent = '';
+            return;
+        }
+
+        // Create new user with Mobile Number
+        const newUser = {
+            firstName,
+            lastName,
+            email,
+            password,
+            role,
+            department,
+            mobileNumber
+        };
+
+        users.push(newUser);
+        successDiv.textContent = 'User added successfully!';
+        errorDiv.textContent = '';
+        document.getElementById('user-form').reset();
+        populateUsersTable();
+        populateApproversDropdown();
+
+        // Initialize Select2 for Role and Department dropdowns
+        $('#userRole, #userDepartment').select2({
+            placeholder: 'Select Visitor',
+            allowClear: true,
+            dropdownCssClass: 'select2-custom' // Add custom CSS class
+        });
+ 
+    }
+
+
+    // Camera Functions
+    function chooseFile(elementId) {
+        const input = document.getElementById(elementId);
+        input.click();
+    }
+
+    function openCamera(inputId, previewId) {
+        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+            navigator.mediaDevices.getUserMedia({ video: true })
+                .then(function (stream) {
+                    const video = document.createElement('video');
+                    video.srcObject = stream;
+                    video.play();
+
+                    video.addEventListener('click', function () {
+                        const canvas = document.createElement('canvas');
+                        canvas.width = video.videoWidth;
+                        canvas.height = video.videoHeight;
+                        canvas.getContext('2d').drawImage(video, 0, 0, video.videoWidth, video.videoHeight);
+                        const dataUrl = canvas.toDataURL('image/png');
+
+                        const preview = document.getElementById(previewId);
+                        preview.src = dataUrl;
+                        preview.style.display = 'block';
+
+                        const input = document.getElementById(inputId);
+                        const blob = dataURLToBlob(dataUrl);
+                        const file = new File([blob], "captured_photo.png", { type: "image/png" });
+                        const dataTransfer = new DataTransfer();
+                        dataTransfer.items.add(file);
+                        input.files = dataTransfer.files;
+
+                        stream.getTracks().forEach(track => track.stop());
+                        video.remove();
+                    });
+
+                    document.body.appendChild(video);
+                })
+                .catch(function (error) {
+                    console.log("Error accessing camera: " + error);
+                    alert("Unable to access camera. Please check permissions.");
+                });
+        } else {
+            alert("Camera not supported on this device.");
+        }
+    }
+
+    function dataURLToBlob(dataURL) {
+        const parts = dataURL.split(',');
+        const mime = parts[0].match(/:(.*?);/)[1];
+        const bstr = atob(parts[1]);
+        let n = bstr.length;
+        const u8arr = new Uint8Array(n);
+        while (n--) {
+            u8arr[n] = bstr.charCodeAt(n);
+        }
+        return new Blob([u8arr], { type: mime });
+    }
+
+    // Image Previews
+    function previewImage(inputId, previewId) {
+        const input = document.getElementById(inputId);
+        const preview = document.getElementById(previewId);
+
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+
+            reader.onload = function(e) {
+                preview.src = e.target.result;
+                preview.style.display = 'block';
+            }
+
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    // Event Listeners for Image Previews
+    ['photo', 'idCardFront', 'idCardBack', 'visitingCard', 'editPhoto', 'editIdCardFront', 'editIdCardBack', 'editVisitingCard'].forEach(id => {
+        const input = document.getElementById(id);
+        if (input) {
+            input.addEventListener('change', function() {
+                previewImage(id, id + 'Preview');
+            });
+        }
+    });
+
+    // Function to print gate pass
+    function printGatePass(gatePassId) {
+        const gatePass = gatePasses.find(gp => gp.gatePassId === gatePassId);
+        const visitor = visitors.find(v => v.id === gatePass.visitorId);
+        const whomToMeetUser = users.find(user => user.email === gatePass.whomToMeet); // Get 'Whom to Meet' user
+
+        if (gatePass && visitor && whomToMeetUser) {
+            const qrCodeURL = `https://api.qrserver.com/v1/create-qr-code/?data=GatePassID:${gatePassId}&size=100x100`;
+            const visitorPhotoURL = visitor.photo || 'https://via.placeholder.com/100';
+            const logoURL = 'https://raw.githubusercontent.com/justashish1/logo/main/logo.png'; // Replace with actual logo URL
+
+            // Format In time
+            const timeIn = gatePass.inTime || '____';
+
+            // Updated print content with 'Whom to Meet' and mobile number
+            const printContent = `
+                <div id="print-area" style="font-family: Arial, sans-serif; width: 210mm; height: 74mm; padding: 5mm; box-sizing: border-box; text-align: center;">
+                    <div style="text-align: center;">
+                        <img src="${logoURL}" alt="Company Logo" style="width: 60mm; height: auto; margin-bottom: 5mm;">
+                    </div>
+                    <div style="text-align: center;">
+                        <h2 style="margin: 0;">Gate Pass</h2>
+                    </div>
+                    <div style="margin-top: 5mm;">
+                        <img id="visitorPhoto" src="${visitorPhotoURL}" alt="Visitor Photo" style="width: 40mm; height: 40mm; object-fit: cover; border-radius: 50%;">
+                    </div>
+                    <div style="margin-top: 5mm; font-size: 12pt; text-align: center;">
+                        <p style="margin: 2mm 0;"><strong>Visitor Name:</strong> ${visitor.firstName} ${visitor.lastName}</p>
+                        <p style="margin: 2mm 0;"><strong>Gate Pass ID:</strong> ${gatePassId}</p>
+                        <p style="margin: 2mm 0;"><strong>Visitor Mobile:</strong> ${visitor.mobileNumber}</p>
+                        <p style="margin: 2mm 0;"><strong>Company:</strong> ${visitor.companyName}</p>
+                        <p style="margin: 2mm 0;"><strong>Purpose:</strong> ${gatePass.purpose}</p>
+                        <p style="margin: 2mm 0;"><strong>Destination:</strong> ${gatePass.destination}</p>
+                        <p style="margin: 2mm 0;"><strong>Whom To Meet:</strong> ${whomToMeetUser.firstName} ${whomToMeetUser.lastName}</p>
+                        <p style="margin: 2mm 0;"><strong>Whom To Meet Mobile:</strong> ${whomToMeetUser.mobileNumber}</p>
+                        <p style="margin: 2mm 0;"><strong>Date:</strong> ${gatePass.dateRequested}</p>
+                        <p style="margin: 2mm 0;"><strong>In Time:</strong> ${timeIn}</p>
+                        <p style="margin: 2mm 0;"><strong>Out Time:</strong> ____________</p>
+                    </div>
+                    <div style="margin-top: 5mm; font-size: 12pt; text-align: center;">
+                        <p style="margin-bottom: 10mm;">______________________________</p>
+                        <p style="margin: 0;">Visitor Signature</p>
+                    </div>
+                    <div style="margin-top: 5mm; font-size: 12pt; text-align: center;">
+                        <p style="margin-bottom: 10mm;">______________________________</p>
+                        <p style="margin: 0;">Employee Signature</p>
+                    </div>
+                    <div style="text-align: center; margin-top: 5mm;">
+                        <img id="qrCodeImage" src="${qrCodeURL}" alt="QR Code" style="width: 30mm; height: 30mm;">
+                    </div>
+                </div>
+            `;
+
+            const printWindow = window.open('', '', 'height=297mm,width=210mm');
+            printWindow.document.write('<html><head><title>Print Gate Pass</title></head><body>');
+            printWindow.document.write(printContent);
+            printWindow.document.write('</body></html>');
+            printWindow.document.close();
+
+            const qrCodeImage = printWindow.document.getElementById('qrCodeImage');
+            const visitorPhoto = printWindow.document.getElementById('visitorPhoto');
+            const logoImage = printWindow.document.querySelector('img[alt="Company Logo"]');
+
+            let imagesLoaded = 0;
+
+            const imageLoaded = () => {
+                imagesLoaded++;
+                if (imagesLoaded === 3) {
+                    printWindow.focus();
+                    printWindow.print();
+                    printWindow.close();
+                }
+            };
+
+            qrCodeImage.addEventListener('load', imageLoaded);
+            visitorPhoto.addEventListener('load', imageLoaded);
+            logoImage.addEventListener('load', imageLoaded);
+
+            qrCodeImage.addEventListener('error', () => {
+                console.error('QR Code image failed to load.');
+                imageLoaded();
+            });
+
+            visitorPhoto.addEventListener('error', () => {
+                console.error('Visitor photo failed to load.');
+                imageLoaded();
+            });
+
+            logoImage.addEventListener('error', () => {
+                console.error('Company logo failed to load.');
+                imageLoaded();
+            });
+
+        } else {
+            alert('Gate Pass, Visitor, or Whom to Meet information not found.');
+        }
+    }
+
+    // Function to populate 'Whom to Meet' dropdown
+    // Function to populate 'Whom to Meet' dropdown
+    function populateWhomToMeetDropdown() {
+        const whomToMeetDropdown = document.getElementById('whomToMeet');
+        whomToMeetDropdown.innerHTML = '<option value="">Select Person</option>'; // Reset options
+
+        users.forEach(user => {
+            const option = document.createElement('option');
+            option.value = user.email; // Use email as value for identification
+            option.textContent = `${user.firstName} ${user.lastName}`;
+            whomToMeetDropdown.appendChild(option);
+        });
+
+        // Initialize Select2 for searchable dropdown
+        $('#whomToMeet').select2({
+            placeholder: 'Select Person',
+            allowClear: true,
+            dropdownCssClass: 'select2-custom' // Add custom CSS class
+        });
+    }
+
+    // Call the functions to populate dropdowns
+    populateVisitorsDropdown();
+    populateApproversDropdown();
+    populateWhomToMeetDropdown();
+
+//----------------//--------------//---------------//----------------------////----------------//--------------//---------------//----------------------//
+
+    // ==================== Local Storage Utility Functions ==================== //
+
+    //
+
+//----------------//-------------------//-----------------////----------------//-------------------//-----------------////----------------//-------------------//-----------------//
+
+
+</script>   
+
+    <!-- Moment.js (required for DateTime Picker) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+
+    <!-- Tempus Dominus Bootstrap 4 JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tempusdominus-bootstrap-4/5.39.0/js/tempusdominus-bootstrap-4.min.js"></script>
+    
+
+
+    </script>        
+            
+    </div>
+</body>
+</html>
