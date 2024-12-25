@@ -93,6 +93,7 @@
             object-fit: contain;
             margin: 0;
             padding: 0;
+            margin-bottom: -20%;
 
         }
 
@@ -150,7 +151,7 @@
         .sidebar .user-info {
             margin-bottom: 0px;
             text-align: center;
-            font-size: 20px;
+            font-size: 15px;
             color: var(--info-color);
             margin-top: 0px;
             margin: 0; /* Remove margins */
@@ -293,7 +294,7 @@
             margin: 2px;
             border: none;
             color: white;
-            transition: background-color var(--transition-speed);
+            transition: background-color 0.3s ease; /* Smooth hover effect */
         }
 
 
@@ -328,7 +329,7 @@
             margin: 2px;
             border: none;
             color: white;
-            transition: background-color var(--transition-speed);
+            transition: background-color 0.3s ease; /* Smooth hover effect */
         }
 
         .approve-button {
@@ -445,6 +446,7 @@
         .modal-header {
             background-color: var(--primary-color);
             color: #f0f0f0;
+            font-weight: bold; /* Bold text for better visibility */
         }
             .modal-content {
             color: #333; /* Change to a darker shade for better visibility */
@@ -575,6 +577,84 @@
             color: #333333; /* Dark text color on hover */
         }
 
+        #login-section {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: absolute; /* Use absolute positioning for easy centering */
+            top: 50%; /* Move to the middle of the screen */
+            left: 50%; /* Center horizontally */
+            transform: translate(-50%, -50%); /* Shift back by 50% of its own width and height */
+            background-color: #444; /* Background color */
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            max-width: 600px; /* Restrict width for better layout */
+            text-align: center;
+            box-sizing: border-box;
+            height: auto;
+            max-height: 100vh;
+        }
+
+
+        /* Styling for the form elements */
+        #login-form {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+        label {
+            margin-bottom: 0.5rem;
+            color: #fff;
+            font-size: 1rem;
+        }
+
+        input {
+            padding: 0.75rem;
+            margin-bottom: 1rem;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 1rem;
+            box-sizing: border-box;
+            width: 100%;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #32c800;
+            box-shadow: 0 0 5px rgba(50, 200, 0, 0.5);
+        }
+
+        button {
+            background-color: #32c800;
+            color: white;
+            padding: 0.75rem;
+            border: none;
+            border-radius: 4px;
+            font-size: 1rem;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        button:hover {
+            background-color: #28b800;
+        }
+
+        .error {
+            color: red;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+        .login-note {
+            margin-top: 1rem;
+            font-size: 0.9rem;
+            color: #f0f0f0; /* Light color for dark background */
+            text-align: center;
+        }
+
+
     </style>
 </head>
 <body>
@@ -601,18 +681,20 @@
         <!-- ==================== Login Section ==================== -->
         <div id="login-section" class="section active-section" role="region" aria-label="Login Section">
             <form id="login-form" novalidate>
-                <img src="https://raw.githubusercontent.com/justashish1/logo/main/logo.png" alt="Logo" class="logo" style="display:block; margin: 0 auto 10px auto; height: 60px;">
-                <h2 class="text-center text-medium text-theme-color">Visitor Management System</h2>
+                <img src="https://raw.githubusercontent.com/justashish1/logo/main/logo.png" alt="Logo" class="logo">
+                <h2>Visitor Management System</h2>
                 <div id="login-error" class="error"></div>
                 <label for="login-email">Email:</label>
                 <input type="email" id="login-email" required aria-required="true">
-
+        
                 <label for="login-password">Password:</label>
                 <input type="password" id="login-password" required aria-required="true">
-
+        
                 <button type="submit">Login</button>
             </form>
+            <p class="login-note">Note: For test use login as info@starengts.com & Password : 1111.</p>
         </div>
+        
 
         <!-- ==================== Status Section ==================== -->
         <div id="status-section" class="section" role="region" aria-label="Gate Pass Status Section">
@@ -1259,14 +1341,26 @@
         // Reset main-content margin
         document.querySelector('.main-content').style.marginLeft = '0';
 
-        // Show login section and reset its layout
+        // Show login section and ensure styles are consistent
         const loginSection = document.getElementById('login-section');
         loginSection.style.display = 'flex';
-        loginSection.style.justifyContent = 'center'; // Center horizontally
-        loginSection.style.alignItems = 'center';     // Center vertically
-        loginSection.style.height = '92vh';          // Full height to ensure centering
-        loginSection.style.width = '80%';          // Reset any margin changes
-
+        loginSection.style.flexDirection = 'column';
+        loginSection.style.justifyContent = 'center';
+        loginSection.style.alignItems = 'center';
+        loginSection.style.position = 'absolute';
+        loginSection.style.top = '50%';
+        loginSection.style.left = '50%';
+        loginSection.style.transform = 'translate(-50%, -50%)';
+        loginSection.style.backgroundColor = '#444';
+        loginSection.style.padding = '2rem';
+        loginSection.style.borderRadius = '10px';
+        loginSection.style.boxShadow = '0px 4px 10px rgba(0, 0, 0, 0.3)';
+        loginSection.style.width = '100%';
+        loginSection.style.maxWidth = '600px';
+        loginSection.style.textAlign = 'center';
+        loginSection.style.boxSizing = 'border-box';
+        loginSection.style.height = 'auto';
+        loginSection.style.maxHeight = '100vh';
 
         console.log('User logged out. Redirected to login.');
     }
