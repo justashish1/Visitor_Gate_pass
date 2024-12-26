@@ -48,7 +48,7 @@
             --info-color: #1abc9c;
             --text-color: #333;
             --header-color: #ffffff;
-            --sidebar-width: 300px;
+            --sidebar-width: 22%;
             --transition-speed: 0.3s;
             --status-pending-color: #e67e22;
             --status-approved-color: #174e04;
@@ -87,21 +87,32 @@
             padding-top: 20px;
         }
 
-        .sidebar .logo {
-            width: 90%;
+        .sidebar {
+            width: 22%;
             height: 100vh;
+            margin-top: 0%;
+            margin-left: 0%;
             object-fit: contain;
             margin: 0;
             padding: 0;
-            margin-bottom: -20%;
-
+            margin-bottom: 0;
         }
+        .logo {
+            width: 75%;
+            height: 10%;
+            margin-top: 10%;
+            margin-left: 10%;
+            object-fit: contain;
+            padding: 0;
+            margin-bottom: 0;
+        }
+
 
         /* Hamburger Menu */
         .hamburger {
             position: fixed;
-            top: 15px;
-            left: 15px;
+            top: 1%;
+            left: 1%;
             font-size: 28px;
             cursor: pointer;
             color: var(--primary-color);
@@ -113,6 +124,23 @@
         @media (max-width: 768px) {
             .hamburger {
                 display: block;
+            }
+            .sidebar {
+                width: 50%; /* Sidebar takes full width on small screens */
+            }
+
+            .main-content {
+                margin-left: 0; /* Removes margin when the sidebar is stacked */
+                width: 100%; /* Takes full width */
+            }
+
+            .table {
+                display: block; /* Stack tables for smaller screens */
+                overflow-x: auto; /* Adds horizontal scroll for tables */
+            }
+
+            .status-button {
+                width: 80px; /* Adjust button size for smaller screens */
             }
         }
 
